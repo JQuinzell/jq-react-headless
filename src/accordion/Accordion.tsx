@@ -135,39 +135,5 @@ export const AccordionContent: FC<{ children: ReactNode; id?: string }> = ({
   children,
 }) => {
   const { isOpen } = useAccordionItem()
-  return <div className={isOpen ? 'block' : 'hidden'}>{children}</div>
-}
-
-export const AccordionExample = () => {
-  return (
-    <>
-      <h1>Accordion</h1>
-      <Accordion type='multiple'>
-        <AccordionItem>
-          <AccordionTrigger>
-            <button>Trigger 1</button>
-          </AccordionTrigger>
-          <AccordionContent>
-            <p>Content 1</p>
-          </AccordionContent>
-        </AccordionItem>
-        <AccordionItem>
-          <AccordionTrigger>
-            <button>Trigger 2</button>
-          </AccordionTrigger>
-          <AccordionContent>
-            <p>Content 2</p>
-          </AccordionContent>
-        </AccordionItem>
-        <AccordionItem>
-          <AccordionTrigger>
-            <button>Trigger 3</button>
-          </AccordionTrigger>
-          <AccordionContent>
-            <p>Content 3</p>
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
-    </>
-  )
+  return <div hidden={!isOpen}>{children}</div>
 }
