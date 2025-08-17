@@ -24,7 +24,7 @@ const AccordionItemContext = createContext<{
   index: number
 } | null>(null)
 
-const AccordionProvider: FC<{
+export const Accordion: FC<{
   children: ReactNode
   value?: string[]
   defaultValue?: string[]
@@ -83,7 +83,7 @@ const useAccordion = () => {
   return context
 }
 
-const AccordionItem: FC<{ children: ReactNode; id?: string }> = ({
+export const AccordionItem: FC<{ children: ReactNode; id?: string }> = ({
   children,
   id: givenId = null,
 }) => {
@@ -116,7 +116,7 @@ const useAccordionItem = () => {
   return context
 }
 
-const AccordionTrigger: FC<{
+export const AccordionTrigger: FC<{
   children: ReactElement<{ onClick?: (e: unknown) => void } & unknown>
 }> = ({ children }) => {
   const { toggleOpenItem } = useAccordion()
@@ -131,7 +131,7 @@ const AccordionTrigger: FC<{
   })
 }
 
-const AccordionContent: FC<{ children: ReactNode; id?: string }> = ({
+export const AccordionContent: FC<{ children: ReactNode; id?: string }> = ({
   children,
 }) => {
   const { isOpen } = useAccordionItem()
@@ -142,7 +142,7 @@ export const AccordionExample = () => {
   return (
     <>
       <h1>Accordion</h1>
-      <AccordionProvider type='multiple'>
+      <Accordion type='multiple'>
         <AccordionItem>
           <AccordionTrigger>
             <button>Trigger 1</button>
@@ -167,7 +167,7 @@ export const AccordionExample = () => {
             <p>Content 3</p>
           </AccordionContent>
         </AccordionItem>
-      </AccordionProvider>
+      </Accordion>
     </>
   )
 }
