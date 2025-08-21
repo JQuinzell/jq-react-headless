@@ -116,18 +116,49 @@ const useAccordionItem = () => {
   return context
 }
 
-export const AccordionTrigger: FC<{
+type AccordionTriggerProps = {
   children: ReactNode
-}> = ({ children }) => {
-  const { toggleOpenItem } = useAccordion()
-  const { id } = useAccordionItem()
+  onClick?: () => void
+  disabled?: boolean
+}
 
-  return <button onClick={() => toggleOpenItem(id)}>{children}</button>
+export const AccordionTrigger: FC<AccordionTriggerProps> = ({
+  children,
+  onClick,
+  disabled,
+}) => {
+  const { toggleOpenItem } = useAccordion()
+  const { id, isOpen, index } = useAccordionItem()
+
+  return (
+    <button
+      id={`accordion-trigger-${index}`}
+      disabled={disabled}
+      aria-disabled={disabled}
+      onClick={() => {
+        toggleOpenItem(id)
+        onClick?.()
+      }}
+      aria-expanded={isOpen}
+      aria-controls={`accordion-content-${index}`}
+    >
+      {children}
+    </button>
+  )
 }
 
 export const AccordionContent: FC<{ children: ReactNode; id?: string }> = ({
   children,
 }) => {
   const { isOpen, index } = useAccordionItem()
-  return <section data-index={index} role="region" hidden={!isOpen}>{children}</section>
+  return (
+    <section
+      id={`accordion-content-${index}`}
+      role='region'
+      hidden={!isOpen}
+      aria-labelledby={`accordion-trigger-${index}`}
+    >
+      {children}
+    </section>
+  )
 }
