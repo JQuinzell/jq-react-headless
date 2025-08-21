@@ -117,23 +117,17 @@ const useAccordionItem = () => {
 }
 
 export const AccordionTrigger: FC<{
-  children: ReactElement<{ onClick?: (e: unknown) => void } & unknown>
+  children: ReactNode
 }> = ({ children }) => {
   const { toggleOpenItem } = useAccordion()
   const { id } = useAccordionItem()
 
-  return cloneElement(children, {
-    ...children.props,
-    onClick: (e: unknown) => {
-      toggleOpenItem(id)
-      children.props.onClick?.(e)
-    },
-  })
+  return <button onClick={() => toggleOpenItem(id)}>{children}</button>
 }
 
 export const AccordionContent: FC<{ children: ReactNode; id?: string }> = ({
   children,
 }) => {
-  const { isOpen } = useAccordionItem()
-  return <div hidden={!isOpen}>{children}</div>
+  const { isOpen, index } = useAccordionItem()
+  return <section data-index={index} role="region" hidden={!isOpen}>{children}</section>
 }

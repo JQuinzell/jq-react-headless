@@ -45,19 +45,19 @@ export const Primary: Story = {
     <Accordion type={args.type}>
       <AccordionItem>
         <AccordionTrigger>
-          <button>Trigger 1</button>
+          Trigger 1
         </AccordionTrigger>
         <AccordionContent>Content 1</AccordionContent>
       </AccordionItem>
       <AccordionItem>
         <AccordionTrigger>
-          <button>Trigger 2</button>
+          Trigger 2
         </AccordionTrigger>
         <AccordionContent>Content 2</AccordionContent>
       </AccordionItem>
       <AccordionItem>
         <AccordionTrigger>
-          <button>Trigger 3</button>
+          Trigger 3
         </AccordionTrigger>
         <AccordionContent>Content 3</AccordionContent>
       </AccordionItem>
