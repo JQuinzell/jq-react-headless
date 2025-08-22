@@ -11,7 +11,7 @@ import {
 
 type AccordionItemType = {
   id: string
-  triggerRef: React.RefObject<HTMLButtonElement | null>
+  triggerRef: HTMLButtonElement
 }
 
 const AccordionContext = createContext<{
@@ -132,7 +132,7 @@ export const AccordionTrigger: FC<AccordionTriggerProps> = ({
   const { id, isOpen, index } = useAccordionItem()
 
   useEffect(() => {
-    registerItem({ id, triggerRef: ref })
+    registerItem({ id, triggerRef: ref.current! })
     return () => unregisterItem(id)
   }, [id])
 
@@ -151,8 +151,8 @@ export const AccordionTrigger: FC<AccordionTriggerProps> = ({
       onKeyDown={(e) => {
         if (disabled) return
         const focusTrigger = (index: number) => {
-          const trigger = items[index].triggerRef.current
-          trigger?.focus()
+          const trigger = items[index].triggerRef
+          trigger.focus()
         }
         const actions: Record<string, () => void | undefined> = {
           ArrowDown: () => focusTrigger((index + 1) % items.length),
