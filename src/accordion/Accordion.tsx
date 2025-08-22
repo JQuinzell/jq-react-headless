@@ -1,21 +1,25 @@
 import {
-  cloneElement,
   createContext,
   useContext,
   useEffect,
   useId,
+  useRef,
   useState,
   type FC,
-  type ReactElement,
   type ReactNode,
 } from 'react'
+
+type AccordionItemType = {
+  id: string
+  triggerRef: React.RefObject<HTMLButtonElement | null>
+}
 
 const AccordionContext = createContext<{
   currentOpenItems: string[]
   toggleOpenItem: (id: string) => void
-  registerItem: (id: string) => void
+  registerItem: (item: AccordionItemType) => void
   unregisterItem: (id: string) => void
-  items: string[]
+  items: AccordionItemType[]
 } | null>(null)
 
 const AccordionItemContext = createContext<{
@@ -33,7 +37,7 @@ export const Accordion: FC<{
 }> = ({ children, value, defaultValue = [], type = 'single', onChange }) => {
   const [currentOpenItems, setCurrentOpenItems] =
     useState<string[]>(defaultValue)
-  const [items, setItems] = useState<string[]>([])
+  const [items, setItems] = useState<AccordionItemType[]>([])
 
   const openItems = value || currentOpenItems
 
@@ -52,12 +56,14 @@ export const Accordion: FC<{
     onChange?.(openItems, newOpenItems)
   }
 
-  const registerItem = (id: string) => {
-    setItems((items) => (items.includes(id) ? items : [...items, id]))
+  const registerItem = (item: AccordionItemType) => {
+    setItems((items) =>
+      items.find((i) => i.id === item.id) ? items : [...items, item]
+    )
   }
 
   const unregisterItem = (id: string) => {
-    setItems((items) => items.filter((item) => item !== id))
+    setItems((items) => items.filter((item) => item.id !== id))
   }
 
   return (
@@ -89,15 +95,9 @@ export const AccordionItem: FC<{ children: ReactNode; id?: string }> = ({
 }) => {
   const defaultId = useId()
   const id = givenId ?? defaultId
-  const { currentOpenItems, registerItem, unregisterItem, items } =
-    useAccordion()
+  const { currentOpenItems, items } = useAccordion()
   const isOpen = currentOpenItems.includes(id)
-  const index = items.indexOf(id)
-
-  useEffect(() => {
-    registerItem(id)
-    return () => unregisterItem(id)
-  }, [id])
+  const index = items.findIndex((item) => item.id === id)
 
   return (
     <AccordionItemContext.Provider value={{ id, isOpen, index }}>
@@ -127,11 +127,18 @@ export const AccordionTrigger: FC<AccordionTriggerProps> = ({
   onClick,
   disabled,
 }) => {
-  const { toggleOpenItem } = useAccordion()
+  const ref = useRef<HTMLButtonElement>(null)
+  const { toggleOpenItem, items, registerItem, unregisterItem } = useAccordion()
   const { id, isOpen, index } = useAccordionItem()
+
+  useEffect(() => {
+    registerItem({ id, triggerRef: ref })
+    return () => unregisterItem(id)
+  }, [id])
 
   return (
     <button
+      ref={ref}
       id={`accordion-trigger-${index}`}
       disabled={disabled}
       aria-disabled={disabled}
@@ -141,6 +148,25 @@ export const AccordionTrigger: FC<AccordionTriggerProps> = ({
       }}
       aria-expanded={isOpen}
       aria-controls={`accordion-content-${index}`}
+      onKeyDown={(e) => {
+        if (disabled) return
+        const focusTrigger = (index: number) => {
+          const trigger = items[index].triggerRef.current
+          trigger?.focus()
+        }
+        const actions: Record<string, () => void | undefined> = {
+          ArrowDown: () => focusTrigger((index + 1) % items.length),
+          ArrowUp: () =>
+            focusTrigger((index - 1 + items.length) % items.length),
+          Home: () => focusTrigger(0),
+          End: () => focusTrigger(items.length - 1),
+        }
+        const action = actions[e.key]
+        if (action) {
+          e.preventDefault()
+          action()
+        }
+      }}
     >
       {children}
     </button>
