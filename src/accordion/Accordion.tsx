@@ -178,13 +178,13 @@ export const AccordionContent: FC<{ children: ReactNode; id?: string }> = ({
 }) => {
   const { isOpen, index } = useAccordionItem()
   return (
-    <section
+    <div
       id={`accordion-content-${index}`}
       role='region'
       hidden={!isOpen}
       aria-labelledby={`accordion-trigger-${index}`}
     >
       {children}
-    </section>
+    </div>
   )
 }

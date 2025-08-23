@@ -3,87 +3,64 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { Accordion } from '.'
 
+type RenderAccordionOptions = {
+  type?: 'single' | 'multiple'
+  items?: { trigger: string; content: string }[]
+}
+
+const defaultItems = [
+  { trigger: 'Trigger 1', content: 'Content 1' },
+  { trigger: 'Trigger 2', content: 'Content 2' },
+  { trigger: 'Trigger 3', content: 'Content 3' },
+]
+
+export const renderAccordion = (options: RenderAccordionOptions = {}) => {
+  const { type, items = defaultItems } = options
+  const user = userEvent.setup()
+
+  render(
+    <Accordion.Root type={type}>
+      {items.map((item, index) => (
+        <Accordion.Item key={index}>
+          <h3>
+            <Accordion.Trigger>{item.trigger}</Accordion.Trigger>
+          </h3>
+          <Accordion.Content>
+            <p>{item.content}</p>
+          </Accordion.Content>
+        </Accordion.Item>
+      ))}
+    </Accordion.Root>
+  )
+
+  const triggers = items.map((item) =>
+    screen.getByRole('button', { name: item.trigger })
+  )
+  const contents = items.map((item) => screen.getByLabelText(item.trigger))
+
+  return { user, triggers, contents }
+}
+
 describe('Accordion', () => {
   describe('Accordion.Root', () => {
     it('indexes all items', async () => {
-      render(
-        <Accordion.Root type='multiple'>
-          <Accordion.Item>
-            <Accordion.Trigger>Trigger 1</Accordion.Trigger>
-            <Accordion.Content>
-              <p>Content 1</p>
-            </Accordion.Content>
-          </Accordion.Item>
-          <Accordion.Item>
-            <Accordion.Trigger>Trigger 2</Accordion.Trigger>
-            <Accordion.Content>
-              <p>Content 2</p>
-            </Accordion.Content>
-          </Accordion.Item>
-          <Accordion.Item>
-            <Accordion.Trigger>Trigger 3</Accordion.Trigger>
-            <Accordion.Content>
-              <p>Content 3</p>
-            </Accordion.Content>
-          </Accordion.Item>
-        </Accordion.Root>
-      )
-
-      const user = userEvent.setup()
-      await user.click(screen.getByRole('button', { name: 'Trigger 1' }))
-      await user.click(screen.getByRole('button', { name: 'Trigger 2' }))
-      await user.click(screen.getByRole('button', { name: 'Trigger 3' }))
-
-      const items = screen.getAllByRole('region')
-
-      expect(items).toHaveLength(3)
-      items.forEach((item, index) => {
+      const { contents } = renderAccordion()
+      expect(contents).toHaveLength(3)
+      contents.forEach((item, index) => {
         expect(item).toHaveAttribute('id', `accordion-content-${index}`)
       })
     })
   })
   describe('Accordion.Content', () => {
     it('renders items as closed by default', () => {
-      render(
-        <Accordion.Root>
-          <Accordion.Item>
-            <Accordion.Trigger>Trigger</Accordion.Trigger>
-            <Accordion.Content>
-              <p>Content</p>
-            </Accordion.Content>
-          </Accordion.Item>
-        </Accordion.Root>
-      )
+      const { contents } = renderAccordion()
 
-      const content = screen.getByText('Content')
+      const content = contents[0]
       expect(content).not.toBeVisible()
     })
 
     it('has correct aria attributes', () => {
-      render(
-        <Accordion.Root>
-          <Accordion.Item>
-            <Accordion.Trigger>Trigger 1</Accordion.Trigger>
-            <Accordion.Content>
-              <p>Content 1</p>
-            </Accordion.Content>
-          </Accordion.Item>
-          <Accordion.Item>
-            <Accordion.Trigger>Trigger 2</Accordion.Trigger>
-            <Accordion.Content>
-              <p>Content 2</p>
-            </Accordion.Content>
-          </Accordion.Item>
-          <Accordion.Item>
-            <Accordion.Trigger>Trigger 3</Accordion.Trigger>
-            <Accordion.Content>
-              <p>Content 3</p>
-            </Accordion.Content>
-          </Accordion.Item>
-        </Accordion.Root>
-      )
-
-      const contents = screen.getAllByRole('region', { hidden: true })
+      const { contents } = renderAccordion()
       contents.forEach((content, index) => {
         expect(content).toHaveAttribute(
           'aria-labelledby',
@@ -96,27 +73,8 @@ describe('Accordion', () => {
 
   describe('Accordion.Trigger', () => {
     it('has correct aria attributes', () => {
-      render(
-        <Accordion.Root>
-          <Accordion.Item>
-            <Accordion.Trigger>Trigger 1</Accordion.Trigger>
-            <Accordion.Content>
-              <p>Content 1</p>
-            </Accordion.Content>
-          </Accordion.Item>
-          <Accordion.Item>
-            <Accordion.Trigger>Trigger 2</Accordion.Trigger>
-          </Accordion.Item>
-          <Accordion.Item>
-            <Accordion.Trigger>Trigger 3</Accordion.Trigger>
-            <Accordion.Content>
-              <p>Content 3</p>
-            </Accordion.Content>
-          </Accordion.Item>
-        </Accordion.Root>
-      )
+      const { triggers } = renderAccordion()
 
-      const triggers = screen.getAllByRole('button')
       triggers.forEach((trigger, index) => {
         expect(trigger).toHaveAttribute('aria-expanded', 'false')
         expect(trigger).toHaveAttribute(
@@ -125,24 +83,14 @@ describe('Accordion', () => {
         )
       })
     })
+
     it('toggles visibility when trigger is clicked', async () => {
-      const user = userEvent.setup()
+      const { user, triggers, contents } = renderAccordion()
 
-      render(
-        <Accordion.Root>
-          <Accordion.Item>
-            <Accordion.Trigger>Trigger</Accordion.Trigger>
-            <Accordion.Content>
-              <p>Content</p>
-            </Accordion.Content>
-          </Accordion.Item>
-        </Accordion.Root>
-      )
-
-      const trigger = screen.getByRole('button', { name: 'Trigger' })
+      const trigger = triggers[0]
       await user.click(trigger)
 
-      const content = screen.getByText('Content')
+      const content = contents[0]
       expect(content).toBeVisible()
       expect(trigger).toHaveAttribute('aria-expanded', 'true')
 
@@ -152,34 +100,11 @@ describe('Accordion', () => {
       expect(trigger).toHaveAttribute('aria-expanded', 'false')
     })
     it('is controllable by keyboard', async () => {
-      const user = userEvent.setup()
+      const { user, triggers } = renderAccordion()
 
-      render(
-        <Accordion.Root>
-          <Accordion.Item>
-            <Accordion.Trigger>Trigger 1</Accordion.Trigger>
-            <Accordion.Content>
-              <p>Content 1</p>
-            </Accordion.Content>
-          </Accordion.Item>
-          <Accordion.Item>
-            <Accordion.Trigger>Trigger 2</Accordion.Trigger>
-            <Accordion.Content>
-              <p>Content 2</p>
-            </Accordion.Content>
-          </Accordion.Item>
-          <Accordion.Item>
-            <Accordion.Trigger>Trigger 3</Accordion.Trigger>
-            <Accordion.Content>
-              <p>Content 3</p>
-            </Accordion.Content>
-          </Accordion.Item>
-        </Accordion.Root>
-      )
-
-      const trigger1 = screen.getByRole('button', { name: 'Trigger 1' })
-      const trigger2 = screen.getByRole('button', { name: 'Trigger 2' })
-      const trigger3 = screen.getByRole('button', { name: 'Trigger 3' })
+      const trigger1 = triggers[0]
+      const trigger2 = triggers[1]
+      const trigger3 = triggers[2]
 
       await user.tab()
       expect(trigger1).toHaveFocus()
@@ -233,28 +158,11 @@ describe('Accordion', () => {
     ])(
       'when type=$type clicking a trigger when another item is open $label the other item',
       async ({ type, assertVisibility }) => {
-        const user = userEvent.setup()
+        const { user, triggers, contents } = renderAccordion({ type })
 
-        render(
-          <Accordion.Root type={type}>
-            <Accordion.Item>
-              <Accordion.Trigger>Trigger 1</Accordion.Trigger>
-              <Accordion.Content>
-                <p>Content 1</p>
-              </Accordion.Content>
-            </Accordion.Item>
-            <Accordion.Item>
-              <Accordion.Trigger>Trigger 2</Accordion.Trigger>
-              <Accordion.Content>
-                <p>Content 2</p>
-              </Accordion.Content>
-            </Accordion.Item>
-          </Accordion.Root>
-        )
-
-        const trigger1 = screen.getByRole('button', { name: 'Trigger 1' })
-        const content1 = screen.getByText('Content 1')
-        const trigger2 = screen.getByRole('button', { name: 'Trigger 2' })
+        const trigger1 = triggers[0]
+        const content1 = contents[0]
+        const trigger2 = triggers[1]
 
         await user.click(trigger1)
         await user.click(trigger2)
