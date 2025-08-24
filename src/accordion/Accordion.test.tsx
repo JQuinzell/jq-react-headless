@@ -5,10 +5,14 @@ import { Accordion } from '.'
 
 type RenderAccordionOptions = {
   type?: 'single' | 'multiple'
-  items?: { trigger: string; content: string }[]
+  items?: {
+    trigger: string
+    content: string
+    header?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6'
+  }[]
 }
 
-const defaultItems = [
+const defaultItems: RenderAccordionOptions['items'] = [
   { trigger: 'Trigger 1', content: 'Content 1' },
   { trigger: 'Trigger 2', content: 'Content 2' },
   { trigger: 'Trigger 3', content: 'Content 3' },
@@ -22,9 +26,9 @@ export const renderAccordion = (options: RenderAccordionOptions = {}) => {
     <Accordion.Root type={type}>
       {items.map((item, index) => (
         <Accordion.Item key={index}>
-          <h3>
+          <Accordion.Header as={item.header}>
             <Accordion.Trigger>{item.trigger}</Accordion.Trigger>
-          </h3>
+          </Accordion.Header>
           <Accordion.Content>
             <p>{item.content}</p>
           </Accordion.Content>
@@ -65,6 +69,31 @@ describe('Accordion', () => {
           'aria-controls',
           `accordion-content-${index}`
         )
+      })
+    })
+    it('renders header as h3 by default', () => {
+      renderAccordion()
+
+      const headers = screen.getAllByRole('heading')
+
+      expect(headers).toHaveLength(defaultItems.length)
+      headers.forEach((header) => {
+        expect(header.tagName).toBe('H3')
+      })
+    })
+    it('can render header as a different level', () => {
+      const items = Array.from({ length: 6 }, (_, index) => ({
+        trigger: `Trigger ${index + 1}`,
+        content: `Content ${index + 1}`,
+        header: `h${index + 1}` as 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6',
+      }))
+      renderAccordion({ items })
+
+      const headers = screen.getAllByRole('heading')
+
+      expect(headers).toHaveLength(6)
+      headers.forEach((header, index) => {
+        expect(header.tagName).toBe(`H${index + 1}`)
       })
     })
   })

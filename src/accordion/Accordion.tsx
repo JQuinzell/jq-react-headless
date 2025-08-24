@@ -1,4 +1,4 @@
-import {
+import React, {
   createContext,
   useContext,
   useEffect,
@@ -6,6 +6,7 @@ import {
   useRef,
   useState,
   type FC,
+  type ReactElement,
   type ReactNode,
 } from 'react'
 
@@ -114,6 +115,18 @@ const useAccordionItem = () => {
     throw new Error('useAccordionItem must be used within an AccordionItem')
   }
   return context
+}
+
+type AccordionHeaderProps = {
+  children: ReactElement<AccordionTriggerProps>
+  as?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6'
+}
+
+export const AccordionHeader: FC<AccordionHeaderProps> = ({
+  children,
+  as: As = 'h3',
+}) => {
+  return <As>{children}</As>
 }
 
 type AccordionTriggerProps = {
