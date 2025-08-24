@@ -42,39 +42,23 @@ export const renderAccordion = (options: RenderAccordionOptions = {}) => {
 }
 
 describe('Accordion', () => {
-  describe('Accordion.Root', () => {
-    it('indexes all items', async () => {
+  describe('Rendering', () => {
+    it('content is closed by default', () => {
       const { contents } = renderAccordion()
-      expect(contents).toHaveLength(3)
-      contents.forEach((item, index) => {
-        expect(item).toHaveAttribute('id', `accordion-content-${index}`)
+      contents.forEach((item) => {
+        expect(item).not.toBeVisible()
       })
     })
-  })
-  describe('Accordion.Content', () => {
-    it('renders items as closed by default', () => {
-      const { contents } = renderAccordion()
-
-      const content = contents[0]
-      expect(content).not.toBeVisible()
-    })
-
-    it('has correct aria attributes', () => {
-      const { contents } = renderAccordion()
+    it('correct aria attributes', () => {
+      const { contents, triggers } = renderAccordion()
       contents.forEach((content, index) => {
         expect(content).toHaveAttribute(
           'aria-labelledby',
           `accordion-trigger-${index}`
         )
         expect(content).toHaveAttribute('id', `accordion-content-${index}`)
+        expect(content).toHaveAttribute('role', 'region')
       })
-    })
-  })
-
-  describe('Accordion.Trigger', () => {
-    it('has correct aria attributes', () => {
-      const { triggers } = renderAccordion()
-
       triggers.forEach((trigger, index) => {
         expect(trigger).toHaveAttribute('aria-expanded', 'false')
         expect(trigger).toHaveAttribute(
@@ -83,7 +67,78 @@ describe('Accordion', () => {
         )
       })
     })
+  })
 
+  describe('keyboard navigation', () => {
+    describe('on ArrowUp', () => {
+      it('focuses trigger before the focused trigger', async () => {
+        const { user, triggers } = renderAccordion()
+
+        triggers[2].focus()
+
+        await user.keyboard('{ArrowUp}')
+        expect(triggers[1]).toHaveFocus()
+
+        await user.keyboard('{ArrowUp}')
+        expect(triggers[0]).toHaveFocus()
+      })
+
+      it('focuses last trigger when focused trigger is first', async () => {
+        const { user, triggers } = renderAccordion()
+
+        triggers[0].focus()
+
+        await user.keyboard('{ArrowUp}')
+        expect(triggers[2]).toHaveFocus()
+      })
+    })
+
+    describe('on ArrowDown', () => {
+      it('cycles through triggers', async () => {
+        const { user, triggers } = renderAccordion()
+
+        triggers[0].focus()
+
+        await user.keyboard('{ArrowDown}')
+        expect(triggers[1]).toHaveFocus()
+
+        await user.keyboard('{ArrowDown}')
+        expect(triggers[2]).toHaveFocus()
+      })
+
+      it('focuses first trigger when focused trigger is last', async () => {
+        const { user, triggers } = renderAccordion()
+
+        triggers[2].focus()
+
+        await user.keyboard('{ArrowDown}')
+        expect(triggers[0]).toHaveFocus()
+      })
+    })
+
+    describe('on Home', () => {
+      it('focuses the first trigger', async () => {
+        const { user, triggers } = renderAccordion()
+
+        triggers[2].focus()
+
+        await user.keyboard('{Home}')
+        expect(triggers[0]).toHaveFocus()
+      })
+    })
+
+    describe('on End', () => {
+      it('focuses the last trigger', async () => {
+        const { user, triggers } = renderAccordion()
+
+        triggers[0].focus()
+
+        await user.keyboard('{End}')
+        expect(triggers[2]).toHaveFocus()
+      })
+    })
+  })
+  describe('Interaction', () => {
     it('toggles visibility when trigger is clicked', async () => {
       const { user, triggers, contents } = renderAccordion()
 
@@ -98,46 +153,6 @@ describe('Accordion', () => {
 
       expect(content).not.toBeVisible()
       expect(trigger).toHaveAttribute('aria-expanded', 'false')
-    })
-    it('is controllable by keyboard', async () => {
-      const { user, triggers } = renderAccordion()
-
-      const trigger1 = triggers[0]
-      const trigger2 = triggers[1]
-      const trigger3 = triggers[2]
-
-      await user.tab()
-      expect(trigger1).toHaveFocus()
-
-      // Down logic
-      await user.keyboard('{ArrowDown}')
-      expect(trigger2).toHaveFocus()
-
-      await user.keyboard('{ArrowDown}')
-      expect(trigger3).toHaveFocus()
-
-      // Up logic
-      await user.keyboard('{ArrowUp}')
-      expect(trigger2).toHaveFocus()
-
-      await user.keyboard('{ArrowUp}')
-      expect(trigger1).toHaveFocus()
-
-      // End logic
-      await user.keyboard('{End}')
-      expect(trigger3).toHaveFocus()
-
-      // Home logic
-      await user.keyboard('{Home}')
-      expect(trigger1).toHaveFocus()
-
-      // Up wraps to end
-      await user.keyboard('{ArrowUp}')
-      expect(trigger3).toHaveFocus()
-
-      // Down wraps to home
-      await user.keyboard('{ArrowDown}')
-      expect(trigger1).toHaveFocus()
     })
 
     const expectVisible = (el: HTMLElement) => expect(el).toBeVisible()
